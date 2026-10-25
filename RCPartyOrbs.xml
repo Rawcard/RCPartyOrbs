@@ -141,9 +141,9 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(self:GetName().."Text"):SetText("Size")
-						getglobal(self:GetName().."High"):SetText("200")
-						getglobal(self:GetName().."Low"):SetText("50")
+						_G[self:GetName().."Text"]:SetText("Size")
+						_G[self:GetName().."High"]:SetText("200")
+						_G[self:GetName().."Low"]:SetText("50")
 						self:SetValueStep(5)
 					</OnLoad>
 					<OnValueChanged>
@@ -217,9 +217,9 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(self:GetName().."Text"):SetText("")
-						getglobal(self:GetName().."High"):SetText("100")
-						getglobal(self:GetName().."Low"):SetText("0")
+						_G[self:GetName().."Text"]:SetText("")
+						_G[self:GetName().."High"]:SetText("100")
+						_G[self:GetName().."Low"]:SetText("0")
 						self:SetValueStep(5)
 					</OnLoad>
 					<OnValueChanged>
@@ -293,9 +293,9 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(self:GetName().."Text"):SetText("")
-						getglobal(self:GetName().."High"):SetText("100")
-						getglobal(self:GetName().."Low"):SetText("0")
+						_G[self:GetName().."Text"]:SetText("")
+						_G[self:GetName().."High"]:SetText("100")
+						_G[self:GetName().."Low"]:SetText("0")
 						self:SetValueStep(1)
 					</OnLoad>
 					<OnValueChanged>

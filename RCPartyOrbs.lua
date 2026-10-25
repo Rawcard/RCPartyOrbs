@@ -1,11 +1,11 @@
 --==============================================================================
 -- RC PARTY ORBS 
--- Version: 79
--- Author: RobColesworthy
+-- Version: 2.3.0
+-- Author: Raw Card
 -- Notes: Replacement for party frames with animated fire orbs.
 -- Features: Threat borders, debuff colors, click-to-dispel, click-to-rez
 --           Configurable modifier key, adjustable font size
--- Compatibility: Retail, Classic Era, Cataclysm Classic, Wrath Classic, MoP Remix
+-- Compatibility: Retail (Midnight), MoP Classic, Cata, Wrath, TBC Anniversary, Classic Era, WoW Forever
 --==============================================================================
 
 -- Create event frame HERE at the very top so ADDON_LOADED isn't missed.
@@ -15,6 +15,49 @@ RCPartyOrbs_EventFrame:RegisterEvent("ADDON_LOADED")
 RCPartyOrbs_EventFrame:RegisterEvent("VARIABLES_LOADED")
 RCPartyOrbs_EventFrame:RegisterEvent("PLAYER_LOGIN")
 RCPartyOrbs_EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+-----------------------------------------------------------
+-- CLIENT COMPATIBILITY
+-- Retail (11.0+) and WoW Forever removed the old aura functions; rebuild them
+-- from C_UnitAuras where missing (locals: other addons never see them).
+-- Those clients also hide some combat values from addons ("secret values":
+-- party health, auras...); they can be shown but not compared or used in math.
+-----------------------------------------------------------
+local function auraTuple(a)
+    if not a then return nil end
+    return a.name, a.icon, a.applications, a.dispelName, a.duration, a.expirationTime, a.sourceUnit,
+        a.isStealable, a.nameplateShowPersonal, a.spellId
+end
+local UnitBuff = UnitBuff or function(unit, index, filter)
+    if C_UnitAuras and C_UnitAuras.GetBuffDataByIndex then
+        return auraTuple(C_UnitAuras.GetBuffDataByIndex(unit, index, filter))
+    end
+end
+local UnitDebuff = UnitDebuff or function(unit, index, filter)
+    if C_UnitAuras and C_UnitAuras.GetDebuffDataByIndex then
+        return auraTuple(C_UnitAuras.GetDebuffDataByIndex(unit, index, filter))
+    end
+end
+function RCPartyOrbs_Secret(v)
+    return issecretvalue ~= nil and issecretvalue(v) or false
+end
+-- a yes/no answer we can trust (a hidden one counts as "no")
+function RCPartyOrbs_True(v)
+    return not RCPartyOrbs_Secret(v) and v and true or false
+end
+-- a readable 0-100 percentage of a unit's health or power (works with hidden values)
+function RCPartyOrbs_Percent(kind, unit, powerType)
+    local curve = CurveConstants and CurveConstants.ScaleTo100
+    local ok, pct = false, nil
+    if kind == "health" and UnitHealthPercent then
+        ok, pct = pcall(UnitHealthPercent, unit, false, curve)
+    elseif kind == "power" and UnitPowerPercent then
+        ok, pct = pcall(UnitPowerPercent, unit, powerType, curve)
+    end
+    if not ok or type(pct) ~= "number" or RCPartyOrbs_Secret(pct) then return nil end
+    if not curve then pct = pct * 100 end
+    return pct
+end
 
 -----------------------------------------------------------
 -- BLIZZARD BUG WORKAROUND
@@ -106,6 +149,9 @@ end
 
 -- UnitAura/UnitDebuff compatibility
 Compat.UnitDebuff = UnitDebuff or function(unit, index, filter)
+    if C_UnitAuras and C_UnitAuras.GetDebuffDataByIndex then
+        return auraTuple(C_UnitAuras.GetDebuffDataByIndex(unit, index, filter))
+    end
     if UnitAura then
         return UnitAura(unit, index, "HARMFUL" .. (filter or ""))
     end
@@ -113,6 +159,9 @@ Compat.UnitDebuff = UnitDebuff or function(unit, index, filter)
 end
 
 Compat.UnitBuff = UnitBuff or function(unit, index, filter)
+    if C_UnitAuras and C_UnitAuras.GetBuffDataByIndex then
+        return auraTuple(C_UnitAuras.GetBuffDataByIndex(unit, index, filter))
+    end
     if UnitAura then
         return UnitAura(unit, index, "HELPFUL" .. (filter or ""))
     end
@@ -672,6 +721,15 @@ local testDebuffType = nil
  end
 
 -- Formats health values (e.g., 5500 -> 5.5K)
+-- the number shown for a hidden (secret) value: formatted by the game
+function RCPartyOrbs_ValueText(real)
+    if AbbreviateNumbers then
+        local ok, text = pcall(AbbreviateNumbers, real)
+        if ok and text then return text end
+    end
+    return real -- FontString:SetText accepts a secret value
+end
+
 local function FormatHealth(val)
     if not val then return "0" end
     if val >= 1000000 then
@@ -767,6 +825,8 @@ local function GetPurgeableBuff(unit)
               nameplateShowPersonal, spellId = UnitBuff(unit, i)
         
         if not name then break end  -- No more buffs
+        -- hidden in combat on Retail / WoW Forever: can't tell
+        if RCPartyOrbs_Secret(isStealable) or RCPartyOrbs_Secret(debuffType) then return nil end
         
         -- Check if this buff is stealable/purgeable (Magic type buffs)
         if isStealable or debuffType == "Magic" then
@@ -801,12 +861,15 @@ local function GetDispellableDebuff(unit)
     -- Scan all debuffs on the unit
     -- Use UnitDebuff (or UnitAura with HARMFUL filter as fallback)
     local getDebuff = UnitDebuff or function(u, i) return UnitAura(u, i, "HARMFUL") end
+    -- (UnitDebuff is the local above, rebuilt from C_UnitAuras on Retail / WoW Forever)
     
     for i = 1, 40 do
         local name, icon, count, debuffType, duration, expirationTime, source, isStealable, 
               nameplateShowPersonal, spellId = getDebuff(unit, i)
         
         if not name then break end  -- No more debuffs
+        -- hidden in combat on Retail / WoW Forever: can't tell
+        if RCPartyOrbs_Secret(name) or RCPartyOrbs_Secret(debuffType) then return nil end
         
         -- Debug: show all debuffs found
         if debugMode then
@@ -2501,7 +2564,9 @@ function UpdateOrbHealth(frame)
     if not UnitExists(unit) and not testMode then return end
     
     local h, maxH, p, maxP, name, r, g, b
+    local realH, realP
     local powerType = UnitPowerType(unit) or 0
+    if RCPartyOrbs_Secret(powerType) then powerType = 0 end
     local isOffline = false
     local isOutOfRange = false
     
@@ -2515,6 +2580,15 @@ function UpdateOrbHealth(frame)
         p = UnitPower(unit, powerType) or 0
         maxP = UnitPowerMax(unit, powerType) or 0
         name = UnitName(unit)
+        -- Retail / WoW Forever hide exact values in combat: fill from the
+        -- readable percentage (0-100 scale) and keep the real value for text
+        realH, realP = h, p
+        if RCPartyOrbs_Secret(h) or RCPartyOrbs_Secret(maxH) then
+            h, maxH = RCPartyOrbs_Percent("health", unit) or 100, 100
+        end
+        if RCPartyOrbs_Secret(p) or RCPartyOrbs_Secret(maxP) then
+            p, maxP = RCPartyOrbs_Percent("power", unit, powerType) or 0, 100
+        end
         
         -- Health color: custom color only applies to player orb, party members always use class color
         if unit == "player" then
@@ -2531,10 +2605,14 @@ function UpdateOrbHealth(frame)
         
         -- Check if unit is offline (only for party members, not player or targets)
         if unit ~= "player" and not string.find(unit, "target") then
-            isOffline = not UnitIsConnected(unit)
+            local connected = UnitIsConnected(unit)
+            isOffline = not RCPartyOrbs_Secret(connected) and not connected
             -- Check if unit is out of range (only works for party/raid members)
             if not isOffline and UnitInRange then
                 local inRange, checkedRange = UnitInRange(unit)
+                if RCPartyOrbs_Secret(inRange) or RCPartyOrbs_Secret(checkedRange) then
+                    checkedRange = false
+                end
                 if checkedRange then
                     isOutOfRange = not inRange
                 end
@@ -2585,7 +2663,7 @@ function UpdateOrbHealth(frame)
     end
     
     -- Handle DEAD state - grey orbs with "DEAD" text and skull indicator
-    local isDead = UnitIsDead(unit) or UnitIsGhost(unit)
+    local isDead = RCPartyOrbs_True(UnitIsDead(unit)) or RCPartyOrbs_True(UnitIsGhost(unit))
     if isDead and not testMode then
         -- Set orb colors to grey/death colors
         if frame.healthOrb then
@@ -2743,7 +2821,7 @@ function UpdateOrbHealth(frame)
     end
     if frame.healthVal then
         if RCPartyOrbsDB.showHealthValue ~= false then
-            frame.healthVal:SetText(FormatHealth(h))
+            frame.healthVal:SetText(RCPartyOrbs_Secret(realH) and RCPartyOrbs_ValueText(realH) or FormatHealth(h))
             frame.healthVal:SetTextColor(textR, textG, textB, 1)
             frame.healthVal:Show()
         else
@@ -2752,7 +2830,7 @@ function UpdateOrbHealth(frame)
     end
     if frame.manaVal then
         if RCPartyOrbsDB.showManaValue ~= false then
-            frame.manaVal:SetText(FormatHealth(p))
+            frame.manaVal:SetText(RCPartyOrbs_Secret(realP) and RCPartyOrbs_ValueText(realP) or FormatHealth(p))
             frame.manaVal:SetTextColor(textR, textG, textB, 1)
             frame.manaVal:Show()
         else
@@ -2765,6 +2843,7 @@ function UpdateOrbHealth(frame)
             local displayName = name or ""
             if RCPartyOrbsDB.showLevel ~= false then
                 local level = UnitLevel(unit) or 0
+                if RCPartyOrbs_Secret(level) then level = 0 end
                 if level > 0 then
                     displayName = displayName .. " " .. level
                 end
@@ -2841,6 +2920,8 @@ function UpdateOrbThreat(frame)
     local function CheckThreat(mobUnit)
         if UnitExists(mobUnit) and UnitCanAttack("player", mobUnit) and UnitAffectingCombat(mobUnit) then
             local isTanking, status, threatPct = UnitDetailedThreatSituation(unit, mobUnit)
+            if RCPartyOrbs_Secret(status) then status = nil end
+            if RCPartyOrbs_Secret(threatPct) then threatPct = nil end
             if status and status > highestStatus then
                 highestStatus = status
             end

@@ -1,0 +1,12 @@
+## Interface: 16001
+## AllowLoadGameType: camelot
+## Title: RC Party Orbs
+## Notes: Replaces party frames with animated fire orbs - click to target, modifier+click to dispel/rez
+## Author: Raw Card
+## X-Curse-Project-ID: 1435676
+## Version: 2.3.0
+## SavedVariables: RCPartyOrbsDB
+
+RCPartyOrbs.lua
+RCPartyOrbs.xml
+RCPartyOrbsMiniMapButton.xml

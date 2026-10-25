@@ -1,5 +1,18 @@
 # RCPartyOrbs Changelog
 
+## Version 2.3.0
+Works on every WoW client: Retail (Midnight), MoP Classic, Cata, Wrath, TBC Anniversary, Classic Era and WoW Forever.
+
+### Retail and WoW Forever
+- **Party orbs keep working in combat.** These clients hide party members' exact health and power from addons during combat; the orbs now fill from the game's readable percentage instead, and the numbers still show.
+- **Fixed errors from removed aura functions** (UnitBuff / UnitDebuff are gone on Retail). Dispel colors and the purge highlight on the target orb work again, out of combat; in combat the game hides debuff types, so the orbs simply don't recolor then.
+- Threat borders, range, offline and dead checks no longer error on values the game hides.
+
+### All clients
+- **TBC Anniversary and WoW Forever are supported** (new TOC files), and the version numbers for Retail 12.1 and Classic Era 1.15.9 are current.
+- Fixed the options window sliders using an old function some clients no longer have.
+- RC Party Orbs now lives on GitHub; releases are built and uploaded to CurseForge automatically.
+
 ## Version 2.2.9
 ### Bug Fixes
 - **Target orb now flips above the party orb on the first pass** - The

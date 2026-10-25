@@ -1,9 +1,10 @@
 ## Interface: 50504
-## Interface-Mainline: 120005
+## Interface-Mainline: 120001, 120005, 120105
 ## Title: RC Party Orbs
 ## Notes: Replaces party frames with animated fire orbs - click to target, modifier+click to dispel/rez
-## Author: RobColesworthy
-## Version: 2.2.9
+## Author: Raw Card
+## X-Curse-Project-ID: 1435676
+## Version: 2.3.0
 ## SavedVariables: RCPartyOrbsDB
 
 RCPartyOrbs.lua
