@@ -98,6 +98,7 @@ local function perm(name)
 end
 
 ALLFRAMES = {}
+BLOCKED = {}
 function CreateFrame(kind, gname, parent, template)
 	local f = perm(kind)
 	f.parent = parent
@@ -115,6 +116,22 @@ function CreateFrame(kind, gname, parent, template)
 	f.UnregisterAllEvents = function(self) self.events = {} end
 	f.IsEventRegistered = function(self, ev) return self.events and self.events[ev] or false end
 	f.GetParent = function(self) return self.parent or UIParent end
+	-- secure frames can't be shown, hidden, moved or reconfigured by addons in
+	-- combat (the game blocks it and reports ADDON_ACTION_BLOCKED)
+	if type(template) == "string" and template:find("Secure") then
+		f.secure = true
+		for _, m in ipairs({ "Show", "Hide", "SetPoint", "ClearAllPoints", "SetSize", "SetWidth", "SetHeight", "SetAttribute",
+			"SetParent", "SetScale", "EnableMouse", "RegisterForClicks", "SetAllPoints" }) do
+			local orig = f[m]
+			f[m] = function(self, ...)
+				if COMBAT then
+					BLOCKED[#BLOCKED + 1] = tostring(gname or kind) .. ":" .. m .. " " .. (debug and debug.traceback and debug.traceback("", 2):match("\n%s*([^\n]*RCPartyOrbs[^\n]*)") or "?")
+					return
+				end
+				return orig(self, ...)
+			end
+		end
+	end
 	ALLFRAMES[#ALLFRAMES + 1] = f
 	if gname then f.__gname = gname; _G[gname] = f end
 	-- the named children Blizzard templates create ($parentText, $parentLow...)
@@ -277,31 +294,19 @@ local function S(v) if COMBAT and SECRET_CLIENT then return secret(v) end return
 -- ================================================================ units
 local enemyUnits = { target = true, targettarget = true, focus = true }
 GROUP = false
+RAID = false
+DEAD, OFFLINE, FAR, DEBUFF = {}, {}, {}, {}
 local function partyUnit(u) return type(u) == "string" and (u:match("^party[1-4]$") or u:match("^partypet[1-4]$")) end
 function UnitExists(u)
 	if u == "player" then return true end
 	if u == "pet" then return PET end
 	if u == "target" or u == "targettarget" then return TARGET end
 	if partyUnit(u) then return GROUP and not u:match("pet") end
+	if type(u) == "string" and u:match("^raid%d+$") then return RAID and tonumber(u:match("%d+")) <= 10 end
+	if type(u) == "string" and u:match("^boss%d$") then return COMBAT and u == "boss1" end
 	return false
 end
-function IsInGroup() return GROUP end
-function GetNumGroupMembers() return GROUP and 5 or 0 end
-function GetNumSubgroupMembers() return GROUP and 4 or 0 end
-function UnitInParty(u) return GROUP and (u == "player" or partyUnit(u)) and true or false end
-function UnitIsGroupLeader(u) return u == "player" end
-function UnitThreatSituation() return S(0) end
-function UnitDetailedThreatSituation() return S(false), S(0), S(0), S(0), S(0) end
-function UnitGetIncomingHeals() return S(0) end
-function UnitGetTotalAbsorbs() return S(0) end
-function UnitPhaseReason() return nil end
-function UnitIsCharmed() return false end
-function UnitHasIncomingResurrection() return false end
-function UnitClass(u)
-	if u == "player" or u == "vehicle" then return CLASS_NAME, CLASS_FILE, CLASS_ID end
-	if u == "party2" then return "Priest", "PRIEST", 5 end
-	return "Warrior", "WARRIOR", 1
-end
+
 function UnitClassBase() return CLASS_FILE end
 function UnitRace() return "Human", "Human", 1 end
 function UnitFactionGroup() return "Alliance", "Alliance" end
@@ -366,12 +371,59 @@ C_UnitAuras = {
 	GetPlayerAuraBySpellID = function() return nil end,
 }
 AuraUtil = { FindAuraByName = function() return nil end, ForEachAura = function() end, UnpackAuraData = function() return nil end }
+C_UnitAuras.GetDebuffDataByIndex = function(u, i)
+	local t = DEBUFF_FOR(u, i)
+	if t then return { name = S("Curse of Doom"), icon = 134400, applications = 0, dispelName = S(t), duration = 30, expirationTime = NOW + 30, sourceUnit = "target", spellId = 603 } end
+end
+C_UnitAuras.GetBuffDataByIndex = function(u, i)
+	if u == "target" and i == 1 then return { name = S("Arcane Intellect"), icon = 134400, applications = 0, dispelName = S("Magic"), isStealable = S(true), duration = 1800, expirationTime = NOW + 1800, sourceUnit = "target", spellId = 1459 } end
+end
+function IsInGroup() return GROUP end
+function GetNumGroupMembers() return GROUP and 5 or 0 end
+function GetNumSubgroupMembers() return GROUP and 4 or 0 end
+function UnitInParty(u) return GROUP and (u == "player" or partyUnit(u)) and true or false end
+function UnitIsGroupLeader(u) return u == "player" end
+function UnitThreatSituation() return S(0) end
+function UnitDetailedThreatSituation() return S(false), S(0), S(0), S(0), S(0) end
+function UnitGetIncomingHeals() return S(0) end
+function UnitGetTotalAbsorbs() return S(0) end
+function UnitPhaseReason() return nil end
+function UnitIsCharmed() return false end
+function UnitHasIncomingResurrection() return false end
+function UnitClass(u)
+	if u == "player" or u == "vehicle" then return CLASS_NAME, CLASS_FILE, CLASS_ID end
+	if u == "party2" then return "Priest", "PRIEST", 5 end
+	return "Warrior", "WARRIOR", 1
+end
+function IsPlayerSpell() return true end
+function IsSpellKnown() return true end
+function IsSpellKnownOrOverridesKnown() return true end
 function GetSpecialization() return 1 end
 function GetSpecializationInfo(i) return 1, "Spec", "", 134400, "DAMAGER" end
 function GetSpecializationInfoByID() return 1, "Spec" end
 function GetInspectSpecialization() return 0 end
 function GetNumTalentTabs() return 3 end
 function GetTalentTabInfo(i) return "Tree" .. i, nil, 0 end
+
+-- party situations (after the defaults above)
+function IsInRaid() return RAID end
+function UnitIsDead(u) return S(DEAD[u] or false) end
+function UnitIsGhost() return false end
+function UnitIsDeadOrGhost(u) return S(DEAD[u] or false) end
+function UnitIsConnected(u) return not OFFLINE[u] end
+function UnitInRange(u) return not FAR[u], true end
+function UnitHasVehicleUI(u) return VEHICLE and u == "player" or false end
+-- a dispellable debuff on a unit, both old and new aura APIs
+function DEBUFF_FOR(u, i)
+	local t = DEBUFF[u]
+	if t and i == 1 then return t end
+end
+function UnitDebuff(u, i) local t = DEBUFF_FOR(u, i) if t then return S("Curse of Doom"), 134400, 0, S(t), 30, NOW + 30, "target", false, false, 603 end end
+function UnitBuff(u, i) if u == "target" and i == 1 then return S("Arcane Intellect"), 134400, 0, S("Magic"), 1800, NOW + 1800, "target", S(true), false, 1459 end end
+function UnitAura(u, i, filter)
+	if type(filter) == "string" and filter:find("HARMFUL") then return UnitDebuff(u, i) end
+	return UnitBuff(u, i)
+end
 
 -- ======================================================== flavor tweaks
 CLASS_NAME = ({ WARRIOR = "Warrior", PALADIN = "Paladin", HUNTER = "Hunter", ROGUE = "Rogue", PRIEST = "Priest", DEATHKNIGHT = "Death Knight",
@@ -428,6 +480,13 @@ else
 		_G["PartyMemberFrame" .. i] = f
 	end
 end
+-- the color picker (the newer one on every current client)
+ColorPickerFrame = perm("ColorPickerFrame")
+ColorPickerFrame.SetupColorPickerAndShow = function(self, info) self.info = info; self.shown = true end
+ColorPickerFrame.GetColorRGB = function() return 1, 0.5, 0 end
+ColorPickerFrame.GetColorAlpha = function() return 1 end
+SOUNDKIT = setmetatable({}, { __index = function() return 8960 end })
+function PlaySoundFile() return true end
 -- APIs this client doesn't have: never stubbed
 ABSENT = {}
 if SECRET_CLIENT then

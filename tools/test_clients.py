@@ -252,6 +252,39 @@ GROUP = true; fire("GROUP_ROSTER_UPDATE")
 fire("PLAYER_LEAVE_COMBAT")
 for i = 1, 10 do NOW = NOW + 0.1; update(0.1) end
 
+-- party situations: a dispellable debuff, a dead, an offline and a far-away member
+DEBUFF.party1 = "Magic"; DEAD.party2 = true; OFFLINE.party3 = true; FAR.party4 = true
+for p = 1, 4 do fire("UNIT_AURA", "party" .. p); fire("UNIT_HEALTH", "party" .. p); fire("UNIT_CONNECTION", "party" .. p) end
+for i = 1, 5 do NOW = NOW + 0.1; update(0.1) end
+-- the orbs show it: debuff color on party1, DEAD on party2, Offline on party3
+local function orbFor(unit)
+	for i = 1, 12 do
+		local f = rawget(_G, "RCPartyOrbFrame" .. i)
+		if f and f.unit == unit then return f end
+	end
+end
+local o1, o2, o3 = orbFor("party1"), orbFor("party2"), orbFor("party3")
+assert(o1 and o2 and o3, "party orbs exist for party1-3")
+if RCPartyOrbsDB.showDebuffColors and (CLASS_FILE == "PRIEST" or CLASS_FILE == "PALADIN") then
+	assert(o1.hasDebuffColor, "party1's dispellable debuff colors its orb")
+end
+assert(o2.unitIsDead, "party2 shows as dead")
+assert(o3.healthPct and o3.healthPct.text == "Offline", "party3 shows Offline")
+COMBAT = true; fire("PLAYER_REGEN_DISABLED")
+for p = 1, 4 do fire("UNIT_AURA", "party" .. p); fire("UNIT_HEALTH", "party" .. p) end
+fire("UNIT_AURA", "target")
+for i = 1, 5 do NOW = NOW + 0.1; update(0.1) end
+COMBAT = false; fire("PLAYER_REGEN_ENABLED")
+DEBUFF, DEAD, OFFLINE, FAR = {}, {}, {}, {}
+-- a raid, a vehicle, then back to a party
+RAID = true; fire("GROUP_ROSTER_UPDATE")
+for i = 1, 3 do NOW = NOW + 0.1; update(0.1) end
+RAID = false; fire("GROUP_ROSTER_UPDATE")
+VEHICLE = true; fire("UNIT_ENTERED_VEHICLE", "player")
+for i = 1, 3 do NOW = NOW + 0.1; update(0.1) end
+VEHICLE = false; fire("UNIT_EXITED_VEHICLE", "player")
+for i = 1, 3 do NOW = NOW + 0.1; update(0.1) end
+
 -- the options window and every slash command it registered
 for _, name in ipairs({ "RCPartyOrbsConfigFrame", "RCPartyOrbsOptions", "RCPartyOrbsOptionsFrame" }) do
 	local f = rawget(_G, name)
@@ -261,16 +294,77 @@ for _, name in ipairs({ "RCPartyOrbsConfigFrame", "RCPartyOrbsOptions", "RCParty
 		step("close " .. name, function() f:Hide() end)
 	end
 end
+-- every event the addon listens for, with each kind of unit, in and out of combat
+local evs = {}
+for _, f in ipairs(ALLFRAMES) do
+	for ev in pairs(f.events or {}) do evs[ev] = true end
+end
+local evlist = {}
+for ev in pairs(evs) do evlist[#evlist + 1] = ev end
+table.sort(evlist)
+for _, combat in ipairs({ false, true }) do
+	COMBAT = combat
+	for _, ev in ipairs(evlist) do
+		for _, unit in ipairs({ "player", "party1", "target", "pet", "focus", "raid3", "nameplate1" }) do
+			step("event " .. ev .. " " .. unit .. (combat and " (combat)" or ""), fire, ev, unit, "Cast-1", 116)
+		end
+	end
+	update(0.1)
+end
+COMBAT = false
+EVENTS_SEEN = #evlist
+
+-- every control on every window: click, toggle back, drag sliders end to end
+local gui = rawget(_G, "RCPartyOrbsGUI")
+if gui then step("open RCPartyOrbsGUI", function() gui:Show() end) end
+CONTROL_ERRORS = {}
+local skip = { ReloadUI = true }
+local snapshot = {}
+for i = 1, #ALLFRAMES do snapshot[i] = ALLFRAMES[i] end
+for _, f in ipairs(snapshot) do
+	local name = tostring(f.__gname or f.kind)
+	for _, ev in ipairs({ "OnShow", "OnEnter", "OnLeave", "OnMouseDown", "OnMouseUp", "OnClick", "OnClick", "OnValueChanged", "OnHide" }) do
+		local fn = f.scripts[ev]
+		if fn then
+			local args = {}
+			if ev == "OnClick" or ev == "OnMouseDown" or ev == "OnMouseUp" then args = { "LeftButton", false } end
+			if ev == "OnValueChanged" then args = { 50, true } end
+			if f.kind == "CheckButton" and ev == "OnClick" then f.checked = not f.checked end
+			local ok, err = pcall(fn, f, unpack(args))
+			if not ok and not tostring(err):find("RELOAD", 1, true) then
+				CONTROL_ERRORS[#CONTROL_ERRORS + 1] = name .. ":" .. ev .. " " .. tostring(err)
+			end
+		end
+	end
+end
+update(0.1)
+if gui then step("close RCPartyOrbsGUI", function() gui:Hide() end) end
+if #CONTROL_ERRORS > 0 then
+	local seen, uniq = {}, {}
+	for _, e in ipairs(CONTROL_ERRORS) do
+		local key = e:gsub("^[^ ]+ ", "")
+		if not seen[key] then seen[key] = true; uniq[#uniq + 1] = e end
+	end
+	error("controls: " .. table.concat(uniq, " || "))
+end
+
 local cmds = {}
 for k in pairs(SlashCmdList) do cmds[#cmds + 1] = k end
 table.sort(cmds)
 for _, k in ipairs(cmds) do
-	for _, arg in ipairs({ "", "test", "reset" }) do
+	for _, arg in ipairs({ "", "help", "test", "test", "reset", "debug", "debug", "toggle", "toggle", "debuff", "debuff", "debuff",
+		"debuff", "debuff", "debuffoff", "dispelcheck", "firecolor", "greencolor", "yellowcolor", "config", "options", "lock", "unlock" }) do
 		step("slash " .. k .. " " .. arg, SlashCmdList[k], arg)
 		update(0.1)
 	end
 end
 update(0.1)
+
+if #BLOCKED > 0 then
+	local seen, uniq = {}, {}
+	for _, b in ipairs(BLOCKED) do if not seen[b] then seen[b] = true; uniq[#uniq + 1] = b end end
+	error("blocked in combat (ADDON_ACTION_BLOCKED): " .. table.concat(uniq, " || "))
+end
 
 local missing = {}
 for k in pairs(MISSING) do missing[#missing + 1] = k end

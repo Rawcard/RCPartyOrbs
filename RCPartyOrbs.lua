@@ -79,12 +79,15 @@ end
 -- Version flags
 local RCPartyOrbs_Version = {
     tocVersion = tocVersion,
-    isRetail = tocVersion >= 100000,                              -- Dragonflight+
+    -- WoW Forever (interface 16xxx, the camelot client) runs the Retail UI and
+    -- API, so it takes the Retail code paths.
+    isForever = tocVersion >= 16000 and tocVersion < 17000,
+    isRetail = tocVersion >= 100000 or (tocVersion >= 16000 and tocVersion < 17000), -- Dragonflight+ and Forever
     isMoP = tocVersion >= 50000 and tocVersion < 60000,          -- MoP Remix
     isCata = tocVersion >= 40000 and tocVersion < 50000,         -- Cataclysm Classic
     isWrath = tocVersion >= 30000 and tocVersion < 40000,        -- Wrath Classic
     isTBC = tocVersion >= 20000 and tocVersion < 30000,          -- TBC Classic
-    isClassicEra = tocVersion < 20000 and tocVersion > 0,        -- Classic Era / Hardcore
+    isClassicEra = tocVersion < 16000 and tocVersion > 0,        -- Classic Era / Hardcore
 }
 
 -- Compatibility wrappers for APIs that differ between versions
@@ -234,8 +237,9 @@ Compat.ShowUnitMenu = function(self, unit)
 
     local menuType = GetUnitMenuType(unit)
 
-    if RCPartyOrbs_Version.isRetail and MenuUtil and MenuUtil.CreateContextMenu then
-        -- Retail 10.0+ (Dragonflight / The War Within)
+    -- The newer menu system: Retail 10.0+, and the Classic clients moved to it
+    -- too (their old *DropDown frames are gone), so use it wherever it exists.
+    if MenuUtil and MenuUtil.CreateContextMenu then
         -- Store unit info on the anchor frame so the menu system's contextData picks it up
         self.unit = unit
         self.name = UnitName(unit)
@@ -269,7 +273,7 @@ Compat.ShowUnitMenu = function(self, unit)
 
     if not dropdown then dropdown = PartyMemberFrame1DropDown end
 
-    if dropdown then
+    if dropdown and ToggleDropDownMenu then
         dropdown.unit = unit
         ToggleDropDownMenu(1, nil, dropdown, self, 0, 0)
     end
@@ -279,8 +283,9 @@ end
 -- Pre-Dragonflight uses direct property assignment on ColorPickerFrame
 Compat.OpenColorPicker = function(options)
     -- options: { r, g, b, a, hasOpacity, func, cancelFunc }
-    if RCPartyOrbs_Version.isRetail and ColorPickerFrame and ColorPickerFrame.SetupColorPickerAndShow then
-        -- Dragonflight+ API
+    if not ColorPickerFrame then return end
+    -- The newer color picker: Retail, and the Classic clients that adopted it
+    if ColorPickerFrame.SetupColorPickerAndShow then
         local info = {
             swatchFunc  = options.func,
             opacityFunc = options.func,
@@ -299,7 +304,9 @@ Compat.OpenColorPicker = function(options)
         ColorPickerFrame.func = options.func
         ColorPickerFrame.swatchFunc = options.func
         ColorPickerFrame.cancelFunc = options.cancelFunc
-        ColorPickerFrame:SetColorRGB(options.r, options.g, options.b)
+        if ColorPickerFrame.SetColorRGB then
+            ColorPickerFrame:SetColorRGB(options.r, options.g, options.b)
+        end
         ColorPickerFrame:Show()
     end
 end
@@ -4295,8 +4302,8 @@ function RCPartyOrbs_OpenColorPicker(colorType)
     -- Callback to apply any color change (called during picker interaction and on OK)
     local function applyFunc()
         local r, g, b, a
-        if RCPartyOrbs_Version.isRetail then
-            -- Dragonflight+ passes r,g,b as args; opacity via ColorPickerFrame
+        if ColorPickerFrame.GetColorAlpha then
+            -- the newer color picker (Retail, and the Classic clients that adopted it)
             r, g, b = ColorPickerFrame:GetColorRGB()
             local opacity = ColorPickerFrame:GetColorAlpha()
             a = opacity ~= nil and opacity or 1

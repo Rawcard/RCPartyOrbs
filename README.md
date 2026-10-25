@@ -10,7 +10,7 @@ Maintained by **Raw Card**.
 
 ## Tests
 
-`pip install lupa && python3 tools/test_clients.py` loads the addon (TOC, XML frames and Lua) on a simulated copy of every client and class, joins a party and plays a fight, with hidden combat values on Retail and WoW Forever. It runs on every push.
+`pip install lupa && python3 tools/test_clients.py` loads the addon (TOC, XML frames and Lua) on a simulated copy of every client and class, joins a party and plays a fight with debuffed, dead, offline and out-of-range members, a raid and a vehicle, clicks every options control, runs every slash command and fires every event the addon listens for. Retail and WoW Forever get hidden combat values, and touching protected frames in combat counts as a failure. It runs on every push.
 
 ## Releasing (for the maintainer)
 

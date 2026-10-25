@@ -9,9 +9,13 @@ Works on every WoW client: Retail (Midnight), MoP Classic, Cata, Wrath, TBC Anni
 - Threat borders, range, offline and dead checks no longer error on values the game hides.
 
 ### All clients
+- **Right-click menu works again on the Classic clients.** Classic Era, TBC, Cata and MoP Classic moved to Blizzard's newer menu system and removed the old party/player dropdowns, so right-clicking an orb did nothing there. It now uses the newer menu wherever it exists.
+- **Color pickers fixed on the Classic clients** for the same reason (they use the newer color picker now).
+- **WoW Forever runs the Retail interface**, so it now takes the Retail code paths instead of the Classic Era ones.
 - **TBC Anniversary and WoW Forever are supported** (new TOC files), and the version numbers for Retail 12.1 and Classic Era 1.15.9 are current.
 - Fixed the options window sliders using an old function some clients no longer have.
 - RC Party Orbs now lives on GitHub; releases are built and uploaded to CurseForge automatically.
+- Checked end to end on every client: every options control and slash command, debuffed, dead, offline and out-of-range party members, raids, vehicles, every event the addon listens for, and nothing touches protected frames in combat.
 
 ## Version 2.2.9
 ### Bug Fixes
