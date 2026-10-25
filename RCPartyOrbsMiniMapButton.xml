@@ -1,0 +1,92 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Script file="RCPartyOrbsMiniMapButton.lua" />
+	<Button name="RCPartyOrbsMiniMapButton" parent="Minimap" movable="true" enableMouse="true" frameStrata="MEDIUM">
+		<Size>
+			<AbsDimension x="33" y="33" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset x="0" y="0" />
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				RCPartyOrbsMiniMapButton:RegisterForDrag("LeftButton")
+				self:RegisterForClicks("LeftButtonUp","RightButtonUp")
+				self:SetScript("OnClick",function(_,arg1)
+					RCPartyOrbsMiniMapButton_OnClick()
+				end)
+				RCPartyOrbsMiniMapButtonPosition_LoadFromDefaults()
+			</OnLoad>
+			<OnDragStart>
+				RCPartyOrbsMiniMapButton_DraggingFrame:Show()
+			</OnDragStart>
+			<OnDragStop>
+				RCPartyOrbsMiniMapButton_DraggingFrame:Hide()
+			</OnDragStop>
+			<OnEnter>
+				RCPartyOrbsMinimapButtonTooltip:ClearLines()
+				RCPartyOrbsMinimapButtonTooltip:SetOwner(RCPartyOrbsMiniMapButton,"CENTER")
+				RCPartyOrbsMinimapButtonTooltip:AddLine("RC Party Orbs")
+				RCPartyOrbsMinimapButtonTooltip:AddLine("Left click to open the menu")
+				RCPartyOrbsMinimapButtonTooltip:AddLine("Hold Shift and Drag on any orb to move it.")
+				RCPartyOrbsMinimapButtonTooltip:Show()
+				RCPartyOrbsMinimapButtonTooltip:SetFrameStrata("TOOLTIP")
+				RCPartyOrbsMinimapButtonTooltip:SetFrameLevel(100)
+			</OnEnter>
+			<OnLeave>
+				RCPartyOrbsMinimapButtonTooltip:Hide()
+			</OnLeave>
+		</Scripts>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+					<Size>
+						<AbsDimension x="56" y="56" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture name="RCPartyOrbsMiniMapButton_Icon" file="Interface\Icons\INV_Egg_03">
+					<Size>
+						<AbsDimension x="20" y="20" />
+					</Size>
+					<Anchors>
+						<Anchor point="CENTER">
+							<Offset>
+								<AbsDimension x="0" y="0" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<TexCoords left="0.07" right="0.93" top="0.07" bottom="0.93" />
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Frame name="RCPartyOrbsMiniMapButton_DraggingFrame" hidden="true">
+				<Scripts>
+					<OnUpdate>
+						RCPartyOrbs_Minimap_Update()
+					</OnUpdate>
+				</Scripts>
+			</Frame>
+			<GameTooltip name="RCPartyOrbsMinimapButtonTooltip" inherits="GameTooltipTemplate">
+				<Layers>
+					<Layer>
+						<FontString font="Interface\addons\RCPartyOrbs\fonts\Of Wildflowers and Wings.ttf">
+							<FontHeight val="16"></FontHeight>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnLoad>
+					</OnLoad>
+				</Scripts>
+			</GameTooltip>
+		</Frames>
+		<HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
+	</Button>
+</Ui>

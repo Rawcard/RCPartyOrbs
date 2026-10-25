@@ -1,0 +1,1942 @@
+<Ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.blizzard.com/wow/ui/">
+	<Frame name="RCPartyOrbsGUI" parent="UIParent" movable="true" hidden="true" enableMouse="true" frameStrata="HIGH">
+		<Size>
+			<AbsDimension x="400" y="600" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOP">
+				<Offset x="0" y="100" />
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="RCPartyOrbsGUIBackground" file="Interface\AddOns\RCPartyOrbs\images\CHICKEN_backdrop.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture name="RCPartyOrbsGUIBorder" file="Interface\AddOns\RCPartyOrbs\images\flame_border.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset x="-55" y="105" />
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset x="45" y="-95" />
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="RCPartyOrbsTitle" inherits="NumberFontNormalHuge" font="Interface\addons\RCPartyOrbs\fonts\Of Wildflowers and Wings.ttf" text="RC Party Orbs" justifyV="TOP">
+					<Size>
+						<AbsDimension x="262" y="57" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset x="0" y="-15" />
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="42" />
+					</FontHeight>
+					<Color r="1" g="0.5" b="0" />
+				</FontString>
+				<FontString name="RCPartyOrbsSubtitle" font="Interface\addons\RCPartyOrbs\fonts\Of Wildflowers and Wings.ttf" text="Configuration Menu" justifyV="TOP">
+					<Size>
+						<AbsDimension x="194" y="39" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset x="0" y="-52" />
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="24" />
+					</FontHeight>
+					<Color r="1" g="0.7" b="0.3" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="CloseButton" inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="75" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="0" y="10" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnMouseUp>
+						Handle_RCPartyOrbsGUI()
+					</OnMouseUp>
+				</Scripts>
+			</Button>
+			
+			<!-- Swirl Type Dropdown -->
+			<Frame name="RCPartyOrbsSwirlLabelFrame">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-100" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsSwirlLabel" inherits="GameFontNormalSmall" text="Swirl Effect:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="RCPartyOrbsSwirlDropdown" inherits="UIDropDownMenuTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="10" y="-110" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnShow>
+						if RCPartyOrbs_InitSwirlDropdown then RCPartyOrbs_InitSwirlDropdown() end
+					</OnShow>
+				</Scripts>
+			</Frame>
+			
+			<!-- Orb Size Slider -->
+			<Frame name="RCPartyOrbsSizeLabelFrame">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-150" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsSizeLabel" inherits="GameFontNormalSmall" text="Orb Size:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Slider name="RCPartyOrbsSizeSlider" inherits="OptionsSliderTemplate" minValue="50" maxValue="200" defaultValue="100" orientation="HORIZONTAL">
+				<Size>
+					<AbsDimension x="200" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-170" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						getglobal(self:GetName().."Text"):SetText("Size")
+						getglobal(self:GetName().."High"):SetText("200")
+						getglobal(self:GetName().."Low"):SetText("50")
+						self:SetValueStep(5)
+					</OnLoad>
+					<OnValueChanged>
+						local size = self:GetValue()
+						if RCPartyOrbsDB then
+							RCPartyOrbsDB.orbSize = size
+							if RCPartyOrbs_ApplyOrbSize then RCPartyOrbs_ApplyOrbSize(size) end
+						end
+						if RCPartyOrbsSizeValueText then
+							RCPartyOrbsSizeValueText:SetText(math.floor(size))
+						end
+					</OnValueChanged>
+					<OnShow>
+						if RCPartyOrbsDB and RCPartyOrbsDB.orbSize then
+							self:SetValue(RCPartyOrbsDB and RCPartyOrbsDB.orbSize)
+							if RCPartyOrbsSizeValueText then
+								RCPartyOrbsSizeValueText:SetText(math.floor(RCPartyOrbsDB and RCPartyOrbsDB.orbSize))
+							end
+						end
+					</OnShow>
+				</Scripts>
+			</Slider>
+			<Frame name="RCPartyOrbsSizeValueFrame">
+				<Size>
+					<AbsDimension x="50" y="15" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="RCPartyOrbsSizeSlider" relativePoint="BOTTOM">
+						<Offset x="0" y="-2" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsSizeValueText" inherits="GameFontHighlightSmall" text="100">
+							<Anchors>
+								<Anchor point="CENTER" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- Orb Spacing Slider -->
+			<Frame name="RCPartyOrbsSpacingLabelFrame">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-210" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsSpacingLabel" inherits="GameFontNormalSmall" text="Party Spacing:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Slider name="RCPartyOrbsSpacingSlider" inherits="OptionsSliderTemplate" minValue="0" maxValue="100" defaultValue="15" orientation="HORIZONTAL">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-230" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						getglobal(self:GetName().."Text"):SetText("")
+						getglobal(self:GetName().."High"):SetText("100")
+						getglobal(self:GetName().."Low"):SetText("0")
+						self:SetValueStep(5)
+					</OnLoad>
+					<OnValueChanged>
+						local spacing = self:GetValue()
+						if RCPartyOrbsDB then
+							if RCPartyOrbsDB then RCPartyOrbsDB.orbSpacing = spacing end
+							PositionOrbs()
+						end
+						if RCPartyOrbsSpacingValueText then
+							RCPartyOrbsSpacingValueText:SetText(math.floor(spacing))
+						end
+					</OnValueChanged>
+					<OnShow>
+						if RCPartyOrbsDB and RCPartyOrbsDB.orbSpacing then
+							self:SetValue(RCPartyOrbsDB and RCPartyOrbsDB.orbSpacing)
+							if RCPartyOrbsSpacingValueText then
+								RCPartyOrbsSpacingValueText:SetText(math.floor(RCPartyOrbsDB and RCPartyOrbsDB.orbSpacing))
+							end
+						end
+					</OnShow>
+				</Scripts>
+			</Slider>
+			<Frame name="RCPartyOrbsSpacingValueFrame">
+				<Size>
+					<AbsDimension x="50" y="15" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="RCPartyOrbsSpacingSlider" relativePoint="BOTTOM">
+						<Offset x="0" y="-2" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsSpacingValueText" inherits="GameFontHighlightSmall" text="15">
+							<Anchors>
+								<Anchor point="CENTER" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- Target Orb Spacing Label -->
+			<Frame name="RCPartyOrbsTargetSpacingLabelFrame">
+				<Size>
+					<AbsDimension x="100" y="15" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="200" y="-218" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsTargetSpacingLabel" inherits="GameFontNormalSmall" text="Target Spacing:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Slider name="RCPartyOrbsTargetSpacingSlider" inherits="OptionsSliderTemplate" minValue="0" maxValue="100" defaultValue="5" orientation="HORIZONTAL">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="200" y="-230" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						getglobal(self:GetName().."Text"):SetText("")
+						getglobal(self:GetName().."High"):SetText("100")
+						getglobal(self:GetName().."Low"):SetText("0")
+						self:SetValueStep(1)
+					</OnLoad>
+					<OnValueChanged>
+						local spacing = self:GetValue()
+						if RCPartyOrbsDB then
+							if RCPartyOrbsDB then RCPartyOrbsDB.targetOrbSpacing = spacing end
+							PositionOrbs()
+						end
+						if RCPartyOrbsTargetSpacingValueText then
+							RCPartyOrbsTargetSpacingValueText:SetText(math.floor(spacing))
+						end
+					</OnValueChanged>
+					<OnShow>
+						if RCPartyOrbsDB and RCPartyOrbsDB.targetOrbSpacing then
+							self:SetValue(RCPartyOrbsDB and RCPartyOrbsDB.targetOrbSpacing)
+							if RCPartyOrbsTargetSpacingValueText then
+								RCPartyOrbsTargetSpacingValueText:SetText(math.floor(RCPartyOrbsDB and RCPartyOrbsDB.targetOrbSpacing))
+							end
+						else
+							self:SetValue(5)
+							if RCPartyOrbsTargetSpacingValueText then
+								RCPartyOrbsTargetSpacingValueText:SetText("5")
+							end
+						end
+					</OnShow>
+				</Scripts>
+			</Slider>
+			<Frame name="RCPartyOrbsTargetSpacingValueFrame">
+				<Size>
+					<AbsDimension x="50" y="15" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="RCPartyOrbsTargetSpacingSlider" relativePoint="BOTTOM">
+						<Offset x="0" y="-2" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsTargetSpacingValueText" inherits="GameFontHighlightSmall" text="5">
+							<Anchors>
+								<Anchor point="CENTER" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<!-- Checkboxes -->
+			<CheckButton name="ShowHealthPercentageCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-280" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showHealthPercentage = self:GetChecked() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showHealthPercentage)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Health %" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="30" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="FocusFontSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowHealthValueCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-305" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showHealthValue = self:GetChecked() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showHealthValue ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Health Value" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="30" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="FocusFontSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowManaValueCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-330" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showManaValue = self:GetChecked() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showManaValue ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Mana Value" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="30" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="FocusFontSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowNameCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-355" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showName = self:GetChecked() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showName)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Name" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="30" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="FocusFontSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowThreatBordersCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-380" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showThreatBorders = self:GetChecked() end
+						if RCPartyOrbs_UpdateThreatVisibility then RCPartyOrbs_UpdateThreatVisibility() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showThreatBorders)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Threat Borders" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="30" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="FocusFontSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowDebuffColorsCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-410" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showDebuffColors = self:GetChecked() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showDebuffColors ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Debuff Colors" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="30" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="FocusFontSmall" />
+			</CheckButton>
+			
+			<!-- Debuff Sound Dropdown -->
+			<Frame name="RCPartyOrbsDebuffSoundLabelFrame">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="200" y="-275" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsDebuffSoundLabel" inherits="GameFontNormalSmall" text="Debuff Alert Sound:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="RCPartyOrbsDebuffSoundDropdown" inherits="UIDropDownMenuTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="180" y="-285" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnShow>
+						if RCPartyOrbs_InitDebuffSoundDropdown then RCPartyOrbs_InitDebuffSoundDropdown() end
+					</OnShow>
+				</Scripts>
+			</Frame>
+			
+			<!-- Font Size Slider - styled to match Orb Size slider -->
+			<Frame name="RCPartyOrbsFontSizeLabelFrame">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="220" y="-360" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsFontSizeLabel" inherits="GameFontNormalSmall" text="Font Size:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Slider name="RCPartyOrbsFontSizeSlider" inherits="OptionsSliderTemplate" minValue="50" maxValue="200" defaultValue="100" valueStep="10" obeyStepOnDrag="true">
+				<Size>
+					<AbsDimension x="180" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="220" y="-380" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self:SetMinMaxValues(50, 200)
+						self:SetValueStep(10)
+						self:SetObeyStepOnDrag(true)
+						_G[self:GetName() .. "Low"]:SetText("50%")
+						_G[self:GetName() .. "High"]:SetText("200%")
+						_G[self:GetName() .. "Text"]:SetText("Size")
+					</OnLoad>
+					<OnShow>
+						local val = RCPartyOrbsDB and RCPartyOrbsDB.fontScale or 100
+						self:SetValue(val)
+						if RCPartyOrbsFontSizeValueText then
+							RCPartyOrbsFontSizeValueText:SetText(val .. "%")
+						end
+					</OnShow>
+					<OnValueChanged>
+						local val = math.floor(self:GetValue())
+						if RCPartyOrbs_SetFontScale then
+							RCPartyOrbs_SetFontScale(val)
+						end
+						if RCPartyOrbsFontSizeValueText then
+							RCPartyOrbsFontSizeValueText:SetText(val .. "%")
+						end
+					</OnValueChanged>
+				</Scripts>
+			</Slider>
+			<Frame name="RCPartyOrbsFontSizeValueFrame">
+				<Size>
+					<AbsDimension x="50" y="15" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativeTo="RCPartyOrbsFontSizeSlider" relativePoint="BOTTOM">
+						<Offset x="0" y="-2" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsFontSizeValueText" inherits="GameFontHighlightSmall" text="100%">
+							<Anchors>
+								<Anchor point="CENTER" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<CheckButton name="ShowHelpOnLoginCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="26" y="-435" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showHelpOnLogin = self:GetChecked() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showHelpOnLogin ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Help on Login" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="30" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="FocusFontSmall" />
+			</CheckButton>
+			
+			<Button name="TogglePlayerOrbsButton" inherits="UIPanelButtonTemplate" text="Hide Orbs">
+				<Size>
+					<AbsDimension x="100" y="25" />
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset x="-20" y="-80" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						local oldVal = RCPartyOrbsDB and RCPartyOrbsDB.showPlayerOrbs
+						if RCPartyOrbsDB then RCPartyOrbsDB.showPlayerOrbs = not RCPartyOrbsDB.showPlayerOrbs end
+						if RCPartyOrbsDB and RCPartyOrbsDB.debugMode then
+							print("Button clicked: showPlayerOrbs changed from " .. tostring(oldVal) .. " to " .. tostring(RCPartyOrbsDB and RCPartyOrbsDB.showPlayerOrbs))
+						end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+						if RCPartyOrbsDB and RCPartyOrbsDB.showPlayerOrbs then
+							self:SetText("Hide Orbs")
+						else
+							self:SetText("Show Orbs")
+						end
+					</OnClick>
+					<OnShow>
+						if RCPartyOrbsDB and RCPartyOrbsDB.showPlayerOrbs ~= false then
+							self:SetText("Hide Orbs")
+						else
+							self:SetText("Show Orbs")
+						end
+					</OnShow>
+				</Scripts>
+			</Button>
+			
+			<!-- Lock/Unlock Frames Button -->
+			<Button name="LockFramesButton" inherits="UIPanelButtonTemplate" text="Unlock Frames">
+				<Size>
+					<AbsDimension x="110" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="140" y="-80" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_ToggleFrameLock then RCPartyOrbs_ToggleFrameLock() end
+					</OnClick>
+					<OnShow>
+						if RCPartyOrbsDB and RCPartyOrbsDB.framesLocked then
+							self:SetText("Unlock Frames")
+						else
+							self:SetText("Lock Frames")
+						end
+					</OnShow>
+				</Scripts>
+			</Button>
+			
+			<!-- Row of action buttons -->
+			<Button name="RCPartyOrbsResetButton" inherits="UIPanelButtonTemplate" text="Reset Positions">
+				<Size>
+					<AbsDimension x="110" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-470" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_ResetPositions then RCPartyOrbs_ResetPositions() end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<Button name="RCPartyOrbsUndoButton" inherits="UIPanelButtonTemplate" text="Undo Move">
+				<Size>
+					<AbsDimension x="90" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="140" y="-470" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_UndoLastMove then RCPartyOrbs_UndoLastMove() end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<Button name="RCPartyOrbsTestMenuButton" inherits="UIPanelButtonTemplate" text="Advanced">
+				<Size>
+					<AbsDimension x="90" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="240" y="-470" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenTestMenu then RCPartyOrbs_OpenTestMenu() end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Help Button -->
+			<Button name="RCPartyOrbsHelpButton" inherits="UIPanelButtonTemplate" text="Help / Info">
+				<Size>
+					<AbsDimension x="90" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="155" y="-500" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenHelpMenu then RCPartyOrbs_OpenHelpMenu() end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetClampedToScreen(true);
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+			</OnDragStop>
+		</Scripts>
+	</Frame>
+	
+	<!-- Test Menu Frame -->
+	<Frame name="RCPartyOrbsTestGUI" toplevel="true" parent="UIParent" enableMouse="true" hidden="true">
+		<Size>
+			<AbsDimension x="300" y="350" />
+		</Size>
+		<Anchors>
+			<Anchor point="LEFT" relativeTo="RCPartyOrbsGUI" relativePoint="RIGHT">
+				<Offset x="150" y="0" />
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="RCPartyOrbsTestGUIBackground" file="Interface\AddOns\RCPartyOrbs\images\Illidan.png">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture name="RCPartyOrbsTestGUIBorder" file="Interface\AddOns\RCPartyOrbs\images\flame_border.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset x="-55" y="105" />
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset x="45" y="-95" />
+						</Anchor>
+					</Anchors>
+					<Color r="0" g="1" b="0" a="1" />
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="RCPartyOrbsTestTitle" inherits="NumberFontNormalHuge" font="Interface\addons\RCPartyOrbs\fonts\Of Wildflowers and Wings.ttf" text="Advanced" justifyV="TOP">
+					<Size>
+						<AbsDimension x="200" y="40" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset x="0" y="-15" />
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="32" />
+					</FontHeight>
+					<Color r="1" g="0.5" b="0" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="RCPartyOrbsTestCloseButton" inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="75" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="0" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsOrbColorsGUI then RCPartyOrbsOrbColorsGUI:Hide() end
+						if RCPartyOrbsThreatColorsGUI then RCPartyOrbsThreatColorsGUI:Hide() end
+						if RCPartyOrbsVisibilityGUI then RCPartyOrbsVisibilityGUI:Hide() end
+						RCPartyOrbsTestGUI:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Test Mode Toggle -->
+			<Button name="RCPartyOrbsTestModeButton" inherits="UIPanelButtonTemplate" text="Toggle Test Mode">
+				<Size>
+					<AbsDimension x="120" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-60" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_ToggleTestMode then RCPartyOrbs_ToggleTestMode() end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Orientation Toggle Button -->
+			<Button name="RCPartyOrbsOrientationButton" inherits="UIPanelButtonTemplate" text="Layout: Horizontal">
+				<Size>
+					<AbsDimension x="130" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="150" y="-60" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_ToggleLayoutOrientation then RCPartyOrbs_ToggleLayoutOrientation() end
+					</OnClick>
+					<OnShow>
+						if RCPartyOrbsDB and RCPartyOrbsDB.partyOrientation == "vertical" then
+							self:SetText("Layout: Vertical")
+						else
+							self:SetText("Layout: Horizontal")
+						end
+					</OnShow>
+				</Scripts>
+			</Button>
+
+			<!-- Orb Colors Sub-Menu Button -->
+			<Button name="RCPartyOrbsOrbColorsButton" inherits="UIPanelButtonTemplate" text="Orb Colors...">
+				<Size>
+					<AbsDimension x="120" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-100" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsOrbColorsGUI then
+							if RCPartyOrbsOrbColorsGUI:IsShown() then
+								RCPartyOrbsOrbColorsGUI:Hide()
+							else
+								-- Close other sub-menus first
+								if RCPartyOrbsThreatColorsGUI then RCPartyOrbsThreatColorsGUI:Hide() end
+								if RCPartyOrbsVisibilityGUI then RCPartyOrbsVisibilityGUI:Hide() end
+								RCPartyOrbsOrbColorsGUI:Show()
+							end
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Threat Colors Sub-Menu Button -->
+			<Button name="RCPartyOrbsThreatColorsButton" inherits="UIPanelButtonTemplate" text="Threat Colors...">
+				<Size>
+					<AbsDimension x="130" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="150" y="-100" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsThreatColorsGUI then
+							if RCPartyOrbsThreatColorsGUI:IsShown() then
+								RCPartyOrbsThreatColorsGUI:Hide()
+							else
+								-- Close other sub-menus first
+								if RCPartyOrbsOrbColorsGUI then RCPartyOrbsOrbColorsGUI:Hide() end
+								if RCPartyOrbsVisibilityGUI then RCPartyOrbsVisibilityGUI:Hide() end
+								RCPartyOrbsThreatColorsGUI:Show()
+							end
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Target Orb Size Slider -->
+			<Slider name="TargetOrbSizeSlider" inherits="OptionsSliderTemplate" minValue="25" maxValue="150" defaultValue="75" valueStep="5">
+				<Size>
+					<AbsDimension x="200" y="17" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="50" y="-150" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						self:SetMinMaxValues(25, 150)
+						self:SetValueStep(5)
+						self:SetObeyStepOnDrag(true)
+						_G[self:GetName().."Low"]:SetText("25%")
+						_G[self:GetName().."High"]:SetText("150%")
+						_G[self:GetName().."Text"]:SetText("Target Orb Size")
+					</OnLoad>
+					<OnShow>
+						local scale = (RCPartyOrbsDB and RCPartyOrbsDB.targetOrbScale) or 75
+						self:SetValue(scale)
+						_G[self:GetName().."Text"]:SetText("Target Orb Size: " .. scale .. "%")
+					</OnShow>
+					<OnValueChanged>
+						local val = math.floor(self:GetValue())
+						if RCPartyOrbsDB then
+							RCPartyOrbsDB.targetOrbScale = val
+						end
+						_G[self:GetName().."Text"]:SetText("Target Orb Size: " .. val .. "%")
+						if RCPartyOrbs_ApplyTargetOrbSize then
+							RCPartyOrbs_ApplyTargetOrbSize(val)
+						end
+					</OnValueChanged>
+				</Scripts>
+			</Slider>
+			
+			<!-- Click Modifier Dropdown -->
+			<Frame name="RCPartyOrbsModifierLabelFrame">
+				<Size>
+					<AbsDimension x="150" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-200" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="RCPartyOrbsModifierLabel" inherits="GameFontNormalSmall" text="Dispel/Rez Modifier:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			<Frame name="RCPartyOrbsModifierDropdown" inherits="UIDropDownMenuTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="110" y="-195" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnShow>
+						if RCPartyOrbs_InitModifierDropdown then RCPartyOrbs_InitModifierDropdown() end
+					</OnShow>
+				</Scripts>
+			</Frame>
+			
+			<!-- Orb Visibility Button -->
+			<Button name="RCPartyOrbsVisibilityButton" inherits="UIPanelButtonTemplate" text="Orb Visibility...">
+				<Size>
+					<AbsDimension x="130" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="85" y="-240" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenVisibilityMenu then RCPartyOrbs_OpenVisibilityMenu() end
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetClampedToScreen(true);
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+			</OnDragStop>
+			<OnHide>
+				if RCPartyOrbsOrbColorsGUI then RCPartyOrbsOrbColorsGUI:Hide() end
+				if RCPartyOrbsThreatColorsGUI then RCPartyOrbsThreatColorsGUI:Hide() end
+				if RCPartyOrbsVisibilityGUI then RCPartyOrbsVisibilityGUI:Hide() end
+			</OnHide>
+		</Scripts>
+	</Frame>
+	
+	<!-- POWER COLORS SUB-MENU -->
+	<Frame name="RCPartyOrbsOrbColorsGUI" toplevel="true" parent="RCPartyOrbsTestGUI" enableMouse="true" hidden="true">
+		<Size>
+			<AbsDimension x="280" y="320" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT" relativeTo="RCPartyOrbsTestGUI" relativePoint="TOPRIGHT">
+				<Offset x="100" y="0" />
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\AddOns\RCPartyOrbs\images\Sindragosa.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture file="Interface\AddOns\RCPartyOrbs\images\flame_border.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset x="-55" y="105" />
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset x="45" y="-95" />
+						</Anchor>
+					</Anchors>
+					<Color r="0.2" g="0.6" b="1" a="1" />
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString inherits="NumberFontNormalHuge" font="Interface\addons\RCPartyOrbs\fonts\Of Wildflowers and Wings.ttf" text="Orb Colors" justifyV="TOP">
+					<Size>
+						<AbsDimension x="220" y="40" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset x="0" y="-15" />
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="28" />
+					</FontHeight>
+					<Color r="0.3" g="0.7" b="1" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="75" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="0" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						RCPartyOrbsOrbColorsGUI:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Health Color -->
+			<Button inherits="UIPanelButtonTemplate" text="Health">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="25" y="-60" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("health") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Mana Color -->
+			<Button inherits="UIPanelButtonTemplate" text="Mana">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="150" y="-60" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("mana") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Rage Color -->
+			<Button inherits="UIPanelButtonTemplate" text="Rage">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="25" y="-95" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("rage") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Energy Color -->
+			<Button inherits="UIPanelButtonTemplate" text="Energy">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="150" y="-95" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("energy") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Focus Color -->
+			<Button inherits="UIPanelButtonTemplate" text="Focus">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="25" y="-130" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("focus") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Runic Power Color -->
+			<Button inherits="UIPanelButtonTemplate" text="Runic Power">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="150" y="-130" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("runic") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Chi/Monk Color -->
+			<Button inherits="UIPanelButtonTemplate" text="Chi (Monk)">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="25" y="-165" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("chi") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Reset to Defaults -->
+			<Button inherits="UIPanelButtonTemplate" text="Reset Defaults">
+				<Size>
+					<AbsDimension x="110" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="85" y="-210" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_ResetCharacterColors then
+							RCPartyOrbs_ResetCharacterColors()
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetClampedToScreen(true);
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+			</OnDragStop>
+		</Scripts>
+	</Frame>
+	
+	<!-- THREAT COLORS SUB-MENU -->
+	<Frame name="RCPartyOrbsThreatColorsGUI" toplevel="true" parent="RCPartyOrbsTestGUI" enableMouse="true" hidden="true">
+		<Size>
+			<AbsDimension x="280" y="220" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT" relativeTo="RCPartyOrbsTestGUI" relativePoint="TOPRIGHT">
+				<Offset x="100" y="0" />
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\AddOns\RCPartyOrbs\images\Deathwing.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture file="Interface\AddOns\RCPartyOrbs\images\flame_border.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset x="-55" y="105" />
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset x="45" y="-95" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="0.3" b="0" a="1" />
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString inherits="NumberFontNormalHuge" font="Interface\addons\RCPartyOrbs\fonts\Of Wildflowers and Wings.ttf" text="Threat Colors" justifyV="TOP">
+					<Size>
+						<AbsDimension x="220" y="40" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset x="0" y="-15" />
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="28" />
+					</FontHeight>
+					<Color r="1" g="0.4" b="0" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="75" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="0" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						RCPartyOrbsThreatColorsGUI:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Fire/High Threat Border -->
+			<Button inherits="UIPanelButtonTemplate" text="High (Red)">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="25" y="-60" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("fire") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Yellow/Medium Threat Border -->
+			<Button inherits="UIPanelButtonTemplate" text="Medium (Yellow)">
+				<Size>
+					<AbsDimension x="115" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="140" y="-60" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("yellow") end
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Green/Low Threat Border -->
+			<Button inherits="UIPanelButtonTemplate" text="Low (Green)">
+				<Size>
+					<AbsDimension x="100" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="85" y="-95" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbs_OpenColorPicker then RCPartyOrbs_OpenColorPicker("green") end
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetClampedToScreen(true);
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+			</OnDragStop>
+		</Scripts>
+	</Frame>
+	
+	<!-- Orb Visibility Menu Frame -->
+	<Frame name="RCPartyOrbsVisibilityGUI" toplevel="true" parent="RCPartyOrbsTestGUI" enableMouse="true" hidden="true">
+		<Size>
+			<AbsDimension x="280" y="530" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT" relativeTo="RCPartyOrbsTestGUI" relativePoint="TOPRIGHT">
+				<Offset x="100" y="0" />
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="RCPartyOrbsVisibilityGUIBackground" file="Interface\AddOns\RCPartyOrbs\images\Illidan.png">
+					<Anchors>
+						<Anchor point="TOPLEFT" />
+						<Anchor point="BOTTOMRIGHT" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture name="RCPartyOrbsVisibilityGUIBorder" file="Interface\AddOns\RCPartyOrbs\images\flame_border.tga">
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset x="-55" y="105" />
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset x="45" y="-95" />
+						</Anchor>
+					</Anchors>
+					<Color r="0.5" g="0" b="1" a="1" />
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="RCPartyOrbsVisibilityTitle" inherits="NumberFontNormalHuge" font="Interface\addons\RCPartyOrbs\fonts\Of Wildflowers and Wings.ttf" text="Orb Visibility" justifyV="TOP">
+					<Size>
+						<AbsDimension x="200" y="40" />
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset x="0" y="-15" />
+						</Anchor>
+					</Anchors>
+					<FontHeight>
+						<AbsValue val="28" />
+					</FontHeight>
+					<Color r="1" g="0.5" b="0" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="RCPartyOrbsVisibilityCloseButton" inherits="UIPanelButtonTemplate" text="Close">
+				<Size>
+					<AbsDimension x="75" y="23" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset x="0" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						RCPartyOrbsVisibilityGUI:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			
+			<!-- Section: Party Member Orbs -->
+			<Frame name="RCPartyOrbsVisibilityPartyLabel">
+				<Size>
+					<AbsDimension x="200" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-55" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString inherits="GameFontNormal" text="Party Member Orbs:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<CheckButton name="ShowPlayerOrbCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-75" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showPlayerOrb = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showPlayerOrb ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Player" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty1OrbCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-100" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty1Orb = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty1Orb ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 1" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty2OrbCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-125" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty2Orb = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty2Orb ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 2" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty3OrbCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-150" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty3Orb = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty3Orb ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 3" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty4OrbCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-175" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty4Orb = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty4Orb ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 4" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<!-- Section: Target Orbs -->
+			<Frame name="RCPartyOrbsVisibilityTargetLabel">
+				<Size>
+					<AbsDimension x="200" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-210" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString inherits="GameFontNormal" text="Target Orbs:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<CheckButton name="ShowTargetOrbCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-230" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showTargetOrb = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showTargetOrb ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Your Target" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowPartyTargetsCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-255" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showPartyTargets = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showPartyTargets ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="All Party Targets" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty1TargetCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="50" y="-280" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty1Target = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty1Target ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 1 Target" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty2TargetCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="50" y="-305" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty2Target = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty2Target ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 2 Target" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty3TargetCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="50" y="-330" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty3Target = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty3Target ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 3 Target" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowParty4TargetCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="50" y="-355" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showParty4Target = self:GetChecked() end
+						if RCPartyOrbs_UpdateVisibility then RCPartyOrbs_UpdateVisibility() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showParty4Target ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Party 4 Target" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<!-- Section: Other Options -->
+			<Frame name="RCPartyOrbsVisibilityOtherLabel">
+				<Size>
+					<AbsDimension x="200" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="20" y="-385" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString inherits="GameFontNormal" text="Other Options:">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+			
+			<CheckButton name="ShowCastBarsCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-405" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showCastBars = self:GetChecked() end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showCastBars ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Cast Bars" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowLevelCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-425" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showLevel = self:GetChecked() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showLevel ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Level" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+			
+			<CheckButton name="ShowRoleIconCheckButton" inherits="UICheckButtonTemplate" checked="true">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="30" y="-445" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showRoleIcon = self:GetChecked() end
+						UpdateAllOrbs()
+					</OnClick>
+					<OnShow>
+						self:SetChecked(RCPartyOrbsDB and RCPartyOrbsDB.showRoleIcon ~= false)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Show Role Icon" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="25" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetClampedToScreen(true);
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+			</OnDragStop>
+		</Scripts>
+	</Frame>
+	
+	<!-- Help Menu Frame -->
+	<Frame name="RCPartyOrbsHelpGUI" toplevel="true" parent="UIParent" inherits="BasicFrameTemplateWithInset" movable="true" enableMouse="true" hidden="true" frameStrata="HIGH">
+		<Size>
+			<AbsDimension x="420" y="550" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER">
+				<Offset x="0" y="0" />
+			</Anchor>
+		</Anchors>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="RCPartyOrbsHelpTitle" inherits="GameFontNormalLarge" parentKey="TitleText" text="RC Party Orbs - Help &amp; Info">
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset x="0" y="-5" />
+						</Anchor>
+					</Anchors>
+					<Color r="1" g="0.8" b="0" />
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<!-- Scrollable content frame -->
+			<ScrollFrame name="RCPartyOrbsHelpScrollFrame" inherits="UIPanelScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="370" y="440" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="15" y="-60" />
+					</Anchor>
+				</Anchors>
+				<ScrollChild>
+					<Frame name="RCPartyOrbsHelpContent">
+						<Size>
+							<AbsDimension x="350" y="1000" />
+						</Size>
+						<Layers>
+							<Layer level="OVERLAY">
+								<FontString name="RCPartyOrbsHelpText" inherits="GameFontNormal" justifyH="LEFT" justifyV="TOP">
+									<Size>
+										<AbsDimension x="340" y="1000" />
+									</Size>
+									<Anchors>
+										<Anchor point="TOPLEFT">
+											<Offset x="5" y="-5" />
+										</Anchor>
+									</Anchors>
+									<Color r="1" g="1" b="1" />
+								</FontString>
+							</Layer>
+						</Layers>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+			
+			<!-- Don't show again checkbox -->
+			<CheckButton name="RCPartyOrbsHelpDontShowCheckButton" inherits="UICheckButtonTemplate">
+				<Size>
+					<AbsDimension x="25" y="25" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT">
+						<Offset x="20" y="15" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						if RCPartyOrbsDB then RCPartyOrbsDB.showHelpOnLogin = not self:GetChecked() end
+						if self:GetChecked() then
+							print("RC Party Orbs: Help menu will not show on login. Use /fpo or click 'Help / Info' to view again.")
+						else
+							print("RC Party Orbs: Help menu will show on login.")
+						end
+					</OnClick>
+					<OnShow>
+						self:SetChecked(not RCPartyOrbsDB and RCPartyOrbsDB.showHelpOnLogin)
+					</OnShow>
+				</Scripts>
+				<ButtonText text="Don't show this again on login" justifyH="LEFT">
+					<Anchors>
+						<Anchor x="28" y="0" point="LEFT" />
+					</Anchors>
+				</ButtonText>
+				<NormalFont style="GameFontNormalSmall" />
+			</CheckButton>
+		</Frames>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetClampedToScreen(true);
+				self.TitleText:SetText("RC Party Orbs - Help &amp; Info");
+			</OnLoad>
+			<OnDragStart>
+				self:StartMoving();
+			</OnDragStart>
+			<OnDragStop>
+				self:StopMovingOrSizing();
+			</OnDragStop>
+			<OnShow>
+				if RCPartyOrbs_PopulateHelpText then RCPartyOrbs_PopulateHelpText() end
+			</OnShow>
+		</Scripts>
+	</Frame>
+</Ui>

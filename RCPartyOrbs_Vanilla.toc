@@ -1,0 +1,10 @@
+## Interface: 11508
+## Title: RC Party Orbs
+## Notes: Replaces party frames with animated fire orbs - click to target, modifier+click to dispel/rez
+## Author: RobColesworthy
+## Version: 2.2.9
+## SavedVariables: RCPartyOrbsDB
+
+RCPartyOrbs.lua
+RCPartyOrbs.xml
+RCPartyOrbsMiniMapButton.xml
