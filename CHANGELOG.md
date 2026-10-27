@@ -1,5 +1,9 @@
 # RCPartyOrbs Changelog
 
+## Version 2.3.1
+- **Wrath Titan Reforged supported** (client 3.80), checked in the Chinese game language.
+- Release jobs updated to GitHub's newer Node 24 actions (no more Node.js 20 warning).
+
 ## Version 2.3.0
 Works on every WoW client: Retail (Midnight), MoP Classic, Cata, Wrath, TBC Anniversary, Classic Era and WoW Forever.
 

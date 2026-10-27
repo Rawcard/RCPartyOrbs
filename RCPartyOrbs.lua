@@ -1,6 +1,6 @@
 --==============================================================================
 -- RC PARTY ORBS 
--- Version: 2.3.0
+-- Version: 2.3.1
 -- Author: Raw Card
 -- Notes: Replacement for party frames with animated fire orbs.
 -- Features: Threat borders, debuff colors, click-to-dispel, click-to-rez
